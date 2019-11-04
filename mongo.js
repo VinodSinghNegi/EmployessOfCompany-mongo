@@ -38,7 +38,7 @@ mongoose.connect(db_url,{
         })
     })
 
-    app.get('/employee',(req,res)=>{
+    app.get('/employees',(req,res)=>{
         employeeDB.find({}).then((employeeList)=>{
             res.send(employeeList)
         }).catch((error)=>{
@@ -59,15 +59,14 @@ mongoose.connect(db_url,{
             employeeDB.find({Company_Name:companyDetails[0].Company_Name}).then((allDetails)=>{
                 res.send([companyDetails,allDetails])
             }).catch((error)=>{
-                res.send(error)
-            
+                res.send(error) 
+            })
         }).catch((error)=>{
             res.send(error)
-        })
-    })
+             })
 })
 
 
-app.listen(8088,()=>{
-    console.log('Server Started at localhost:8088')
+app.listen(8080,()=>{
+    console.log('Server Started at localhost:8080')
 })
