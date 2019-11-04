@@ -29,7 +29,7 @@ mongoose.connect(db_url,{
        
     })
 
-    app.post('/employee',(req,res)=>{
+    app.post('/employees',(req,res)=>{
         const employee=new employeeDB(req.body)
         employee.save().then(()=>{
             res.send(employee)
