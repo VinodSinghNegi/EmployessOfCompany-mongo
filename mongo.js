@@ -1,145 +1,73 @@
 const mongo=require('mongodb')
 const express=require('express')
 const ObjectID=require('mongodb').ObjectID
+const mongoose=require('mongoose')
 const app=express()
-const db_url="mongodb://127.0.0.1:27017"
 
-let cid
+const db_url="mongodb://127.0.0.1:27017/MyDatabase"
+
+const companyDB=require('./models/company')
+const employeeDB=require('./models/employees')
+
 app.use(express.json())
+app.use(express.urlencoded({extended:true}))
 
-mongo.connect(db_url,{useUnifiedTopology:true},(err,client)=>{
-    if (err) throw err
+mongoose.connect(db_url,{
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useUnifiedTopology: true})
 
-    const CRUD_OPERATING_DB=client.db('CRUD_OPERATING_DB')
-    const companyNames=CRUD_OPERATING_DB.collection('companyNames')
-    const employees=CRUD_OPERATING_DB.collection('employees')
 
-//CREATING COMPANY DATABASE
-
-    companyNames.insertMany([
-        {Company_Name:'Vinove',
-         About:'I.T service company',
-         Location:'Noida'
-        },
-        {Company_Name:'Value Coders',
-         About:'I.T service company',
-         Location:'Gurugram'
-        },
-        {Company_Name:'Pixel Crayon',
-         About:'I.T service company',
-         Location:'Delhi'
-        }
-    ],(err,result)=>{
-        if(err) throw err
+    app.post('/company',(req,res)=>{
+        const company=new companyDB(req.body)
         
-        console.log('Company Values Inserted Succesfully')
-    })
-
-
-//CREATING EMPLOYEES DATABASE
-    
-    // function findv (value){
-    //     companyNames.find({Company_Name:value}, {_id:1}).toArray((err, result)=>{
-    //         console.log(result[0]._id)
-    //         cid=(result[0]._id)
-    //         console.log(cid)
-    //         return cid
-    //     })
-    // }
-    employees.insertMany([
-        {Employee_Name:'Milan',
-         Contact:'9876543210',
-         Experience:'Fresher',
-         Employee_Role:'Software Developer',
-         Company_Name:'Vinove',
-        //   C_id: findv('Vinove')
-        },
-        {Employee_Name:'Rahul',
-         Contact:'9876543210',
-         Experience:'Fresher',
-         Employee_Role:'Software Developer',
-         Company_Name:'Value Coders'
-        },
-        {Employee_Name:'Mohit',
-         Contact:'9876543210',
-         Experience:'Fresher',
-         Employee_Role:'Software Developer',
-         Company_Name:'Pixel Crayon'
-        },
-        {Employee_Name:'Vinod',
-         Contact:'9876543210',
-         Experience:'Fresher',
-         Employee_Role:'Software Developer',
-         Company_Name:'Vinove'
-        },
-        {Employee_Name:'Paramjeet',
-         Contact:'9876543210',
-         Experience:'Fresher',
-         Employee_Role:'Software Developer',
-         Company_Name:'Value Coders'
-        },
-        {Employee_Name:'Hanifa',
-         Contact:'9876543210',
-         Experience:'Fresher',
-         Employee_Role:'Software Developer',
-         Company_Name:'Pixel Crayon'
-        },
-        
-    ], (err,result)=>{
-        if(err) throw err
-
-        console.log('Employees Values Inserted Succesfully')
-    })
-
-    
-
-
-    app.get('/company',(req,res)=>{                     //  REQUEST ON '/company' Url
-        companyNames.find({}).toArray((error,user)=>{
-            if(error) throw error
-
-            res.send(user)
+        company.save().then(()=>{
+            res.send(company)
+        }).catch((error)=>{
+            res.send(error)
         })
-        
-        
+       
     })
 
-    app.get('/employees',(req,res)=>{                   //  REQUEST ON '/employees' Url
-        employees.find({}).toArray((error,user)=>{
-            if(error) throw error
-
-            res.send(user)
+    app.post('/employee',(req,res)=>{
+        const employee=new employeeDB(req.body)
+        employee.save().then(()=>{
+            res.send(employee)
+        }).catch((error)=>{
+            res.send(error)
         })
     })
 
-    app.get('/company/:c_id',(req,res)=>{                  //  REQUEST ON '/company/id' Url
-
-        companyNames.find({
-            _id:new ObjectID(req.params.c_id)}).toArray((error,user)=>{
-            if(error) throw error
-        
-        employees.find({Company_Name:user[0].Company_Name}).toArray((err,result)=>{
-            if(err) throw err
-            res.send([user,result])
-
+    app.get('/employee',(req,res)=>{
+        employeeDB.find({}).then((employeeList)=>{
+            res.send(employeeList)
+        }).catch((error)=>{
+            res.send(error)
         })
+    })
 
+    app.get('/company',(req,res)=>{                     
+        companyDB.find({}).then((companyList)=>{
+            res.send(companyList)
+        }).catch((error)=>{
+            res.send(error)
+        })
+    })
+
+    app.get('/company/:c_id',(req,res)=>{
+        companyDB.find({_id:new ObjectID(req.params.c_id)}).then((companyDetails)=>{
+            employeeDB.find({Company_Name:companyDetails[0].Company_Name}).then((allDetails)=>{
+                res.send([companyDetails,allDetails])
+            }).catch((error)=>{
+                res.send(error)
             
+        }).catch((error)=>{
+            res.send(error)
         })
     })
-
-    app.get('/employees/:e_id',(req,res)=>{                 //  REQUEST ON '/employee/id' Url
-
-        employees.find({
-            _id:new ObjectID(req.params.e_id)}).toArray((error,user)=>{
-                if(error) throw error
-
-                res.send(user)
-            })
-        })
-    })
+})
 
 
-app.listen(8080,()=>{
-    console.log('Server Started at localhost:8080')
+app.listen(8088,()=>{
+    console.log('Server Started at localhost:8088')
 })
